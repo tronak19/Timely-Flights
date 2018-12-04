@@ -1,2 +1,2 @@
-# Timely-Flights
+# Timely Flights
 Information Visualization Project
