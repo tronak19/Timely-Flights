@@ -21,6 +21,9 @@
 		stroke-linecap: round;
 		pointer-events: none;
 	}
+	.bar{
+		fill: steelblue
+	}
 </style>
 
 <body>
@@ -64,7 +67,7 @@
 		<h1>Graph 3</h1>
 	</div>
 
-</body>
+	</body>
 </html>
 <script>
 	let airlines = [{AirlineID: "1", AirlineName: "Jet", Count: 1100},
@@ -78,13 +81,13 @@
 									{AirlineID: "9", AirlineName: "US Airlin", Count: 600},
 									{AirlineID: "10", AirlineName: "US Airline", Count: 800}];
 
-	var svg = d3.select("#Map");
+	var map_svg = d3.select("#Map");
 	var path = d3.geoPath();
 
 	d3.json("https://d3js.org/us-10m.v1.json", function(error, us) {
 			if (error) throw error;
 
-			svg.append("g")
+			map_svg.append("g")
 					.attr("class", "states")
 					.attr("fill", "#ddd")
 					.selectAll("path")
@@ -92,9 +95,66 @@
 					.enter().append("path")
 					.attr("d", path);
 
-			svg.append("path")
+			map_svg.append("path")
 					.attr("class", "state-borders")
 					.attr("fill", "#eee")
 					.attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
 	});
+
+	// set the dimensions and margins of the graph
+	var margin = {top: 20, right: 20, bottom: 30, left: 40},
+			width = 960 - margin.left - margin.right,
+			height = 500 - margin.top - margin.bottom;
+	
+	// set the ranges
+	var x = d3.scaleBand()
+						.range([0, width])
+						.padding(0.1);
+	var y = d3.scaleLinear()
+						.range([height, 0]);
+						
+	// append the svg object to the body of the page
+	// append a 'group' element to 'svg'
+	// moves the 'group' element to the top left margin
+	var svg = d3.select("#graph_2").append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+		.append("g")
+			.attr("transform", 
+						"translate(" + margin.left + "," + margin.top + ")");
+	
+	// get the data
+	d3.csv("airlines.csv", function(error, data) {
+		if (error) throw error;
+	
+		// format the data
+		data.forEach(function(d) {
+			d.Count = +d.Count;
+		});
+	
+		// Scale the range of the data in the domains
+		x.domain(data.map(function(d) { return d.AirlineName; }));
+		y.domain([0, d3.max(data, function(d) { return d.Count; })]);
+	
+		// append the rectangles for the bar chart
+		svg.selectAll(".bar")
+				.data(data)
+			.enter().append("rect")
+				.attr("class", "bar")
+				.attr("x", function(d) { return x(d.AirlineName); })
+				.attr("width", x.bandwidth())
+				.attr("y", function(d) { return y(d.Count); })
+				.attr("height", function(d) { return height - y(d.Count); });
+	
+		// add the x Axis
+		svg.append("g")
+				.attr("transform", "translate(0," + height + ")")
+				.call(d3.axisBottom(x));
+	
+		// add the y Axis
+		svg.append("g")
+				.call(d3.axisLeft(y));
+	
+	});
+		
 </script>
