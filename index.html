@@ -2,13 +2,18 @@
 <html>
 <head>
 	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
-	<!-- <script type="text/javascript" src="bootstrap/js/jquery-3.3.1.slim.min.js"></script> -->
-	<!-- <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script> -->
+	<script type="text/javascript" src="bootstrap/js/jquery-3.3.1.slim.min.js"></script>
+	<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
 	<script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://d3js.org/topojson.v2.min.js"></script>
 	<title>Timely Flights For You</title>
 </head>
 <style>
+	.line {
+	    fill: none;
+	    stroke: steelblue;
+	    stroke-width: 2px;
+	}
 	.states :hover {
 		fill: red;
 	}
@@ -56,7 +61,7 @@
 
 	<div class="container-fluid" id="graph_1">
 		<h1>Graph 1</h1>
-		<svg id="Map" width="960" height="600"></svg>
+		<svg id="Map" width="auto" height="600"></svg>
 	</div>
 
 	<div class="container-fluid" id="graph_2">
@@ -101,21 +106,16 @@
 					.attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
 	});
 
-	// set the dimensions and margins of the graph
 	var margin = {top: 20, right: 20, bottom: 30, left: 40},
 			width = 960 - margin.left - margin.right,
 			height = 500 - margin.top - margin.bottom;
 	
-	// set the ranges
 	var x = d3.scaleBand()
 						.range([0, width])
 						.padding(0.1);
 	var y = d3.scaleLinear()
 						.range([height, 0]);
 						
-	// append the svg object to the body of the page
-	// append a 'group' element to 'svg'
-	// moves the 'group' element to the top left margin
 	var svg = d3.select("#graph_2").append("svg")
 			.attr("width", width + margin.left + margin.right)
 			.attr("height", height + margin.top + margin.bottom)
@@ -123,20 +123,16 @@
 			.attr("transform", 
 						"translate(" + margin.left + "," + margin.top + ")");
 	
-	// get the data
 	d3.csv("airlines.csv", function(error, data) {
 		if (error) throw error;
 	
-		// format the data
 		data.forEach(function(d) {
 			d.Count = +d.Count;
 		});
 	
-		// Scale the range of the data in the domains
 		x.domain(data.map(function(d) { return d.AirlineName; }));
 		y.domain([0, d3.max(data, function(d) { return d.Count; })]);
 	
-		// append the rectangles for the bar chart
 		svg.selectAll(".bar")
 				.data(data)
 			.enter().append("rect")
@@ -146,15 +142,66 @@
 				.attr("y", function(d) { return y(d.Count); })
 				.attr("height", function(d) { return height - y(d.Count); });
 	
-		// add the x Axis
 		svg.append("g")
 				.attr("transform", "translate(0," + height + ")")
 				.call(d3.axisBottom(x));
 	
-		// add the y Axis
 		svg.append("g")
 				.call(d3.axisLeft(y));
-	
 	});
+
+	var n = 21;
+	var airline_list =	[
+		'Swiss',
+		'Emirates',
+		'Etihad',
+		'British Airlines',
+		'Lufthansa',
+		'Air India',
+		'Qatar',
+		'Air China'
+	];
+
+	var xScale = d3.scaleBand()
+			.domain(airline_list)
+			.range([0, width]);
+
+	var yScale = d3.scaleLinear()
+			.domain([0, 60])
+			.range([height, 0]);
+
+	var line = d3.line()
+			.x(function(d, i) { return xScale(airline_list[i]); })
+			.y(function(d) { return yScale(d.delay); })
+			.curve(d3.curveMonotoneX)
+	
+	d3.csv("line_data.csv", function(error, data) {
+		if (error) throw error;
 		
+		data.forEach(function(d) {
+			d.delay = +d.delay;
+		});
+
+	var dataset = data;
+
+	var line_svg = d3.select("#graph_3").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	line_svg.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + height + ")")
+		.call(d3.axisBottom(xScale));
+
+	line_svg.append("g")
+		.attr("class", "y axis")
+		.call(d3.axisLeft(yScale));
+
+	line_svg.append("path")
+		.datum(dataset)
+		.attr("class", "line")
+		.attr("d", line);
+  });
 </script>
