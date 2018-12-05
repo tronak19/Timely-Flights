@@ -2,10 +2,27 @@
 <html>
 <head>
 	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
-	<script type="text/javascript" src="bootstrap/js/jquery-3.3.1.slim.min.js"></script>
-	<script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script>
+	<!-- <script type="text/javascript" src="bootstrap/js/jquery-3.3.1.slim.min.js"></script> -->
+	<!-- <script type="text/javascript" src="bootstrap/js/bootstrap.min.js"></script> -->
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://d3js.org/topojson.v2.min.js"></script>
 	<title>Timely Flights For You</title>
 </head>
+<style>
+	.states :hover {
+		fill: red;
+	}
+
+	.state-borders {
+		fill: none;
+		stroke: #fff;
+		stroke-width: 0.5px;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		pointer-events: none;
+	}
+</style>
+
 <body>
 	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 	  <span class="navbar-brand mb-0 h1">Timely Flights</span>
@@ -30,12 +47,13 @@
 	  </div>
 	</nav>
 
-	<div class="container-fluid">
+	<!-- <div class="container-fluid">
 		<h1>Timely Flights For You</h1>
-	</div>
+	</div> -->
 
 	<div class="container-fluid" id="graph_1">
 		<h1>Graph 1</h1>
+		<svg id="Map" width="960" height="600"></svg>
 	</div>
 
 	<div class="container-fluid" id="graph_2">
@@ -48,3 +66,35 @@
 
 </body>
 </html>
+<script>
+	let airlines = [{AirlineID: "1", AirlineName: "Jet", Count: 1100},
+									{AirlineID: "2", AirlineName: "Qatar", Count: 1400},
+									{AirlineID: "3", AirlineName: "US Airlines", Count: 1600},
+									{AirlineID: "4", AirlineName: "Uirlines", Count: 1600},
+									{AirlineID: "5", AirlineName: "US Aes", Count: 1300},
+									{AirlineID: "6", AirlineName: "Airlines", Count: 1200},
+									{AirlineID: "7", AirlineName: "US lines", Count: 1260},
+									{AirlineID: "8", AirlineName: "US Aires", Count: 600},
+									{AirlineID: "9", AirlineName: "US Airlin", Count: 600},
+									{AirlineID: "10", AirlineName: "US Airline", Count: 800}];
+
+	var svg = d3.select("#Map");
+	var path = d3.geoPath();
+
+	d3.json("https://d3js.org/us-10m.v1.json", function(error, us) {
+			if (error) throw error;
+
+			svg.append("g")
+					.attr("class", "states")
+					.attr("fill", "#ddd")
+					.selectAll("path")
+					.data(topojson.feature(us, us.objects.states).features)
+					.enter().append("path")
+					.attr("d", path);
+
+			svg.append("path")
+					.attr("class", "state-borders")
+					.attr("fill", "#eee")
+					.attr("d", path(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; })));
+	});
+</script>
